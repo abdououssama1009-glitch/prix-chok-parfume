@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المالك - PRIX CHOC PARFUM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبة Supabase -->
+    <script src="IMAGES/799486822_1424005629793854_5673149828438747227_n.jpg"></script>
+    <style>
+        :root {
+            --primary-pink: #f7a8b8;
+            --black: #0d0d0d;
+            --white: #ffffff;
+            --green: #27ae60;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --radius-md: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body { background-color: #0b0b0b; color: var(--white); padding: 20px 15px; }
+
+        .login-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: #0b0b0b; display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-box {
+            background: #171717; padding: 30px 20px; border-radius: 20px;
+            border: 2px solid var(--primary-pink); text-align: center; width: 90%; max-width: 380px;
+        }
+        .login-box h2 { color: var(--primary-pink); margin-bottom: 15px; font-size: 1.3rem; }
+        .login-box input {
+            width: 100%; padding: 12px; background: #222; border: 1px solid #333;
+            border-radius: var(--radius-md); color: white; text-align: center; font-size: 1.1rem; margin-bottom: 15px;
+        }
+
+        .admin-dashboard { display: none; max-width: 800px; margin: 0 auto; }
+        .dashboard-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 12px; background: #222; border: none; color: #aaa; border-radius: var(--radius-md); font-weight: bold; cursor: pointer; }
+        .tab-btn.active { background: var(--primary-pink); color: var(--black); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .orders-list { display: flex; flex-direction: column; gap: 12px; }
+        .order-card-admin { background: #171717; border-radius: var(--radius-md); padding: 15px; border-right: 4px solid var(--orange); }
+        .order-card-admin.status-confirmed { border-right-color: var(--green); }
+        .order-card-admin.status-cancelled { border-right-color: var(--red); }
+
+        .order-header-admin { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .order-title { font-weight: 800; color: var(--primary-pink); }
+        .order-time { font-size: 0.75rem; color: #888; }
+        .order-info { font-size: 0.85rem; color: #ddd; margin-bottom: 10px; line-height: 1.6; }
+
+        .order-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; }
+        .action-btn { padding: 6px 12px; border-radius: 6px; border: none; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .btn-call { background: #25D366; color: white; }
+        .btn-status { background: #333; color: white; }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: #ddd; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: var(--radius-md); color: white; }
+        .btn-primary { background: var(--primary-pink); color: var(--black); border: none; padding: 12px; border-radius: var(--radius-md); font-weight: 800; width: 100%; cursor: pointer; }
+
+        .products-manage-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .manage-card { background: #171717; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+        .manage-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>🔒 دخول المالك</h2>
+            <input type="password" id="passInput" placeholder="أدخل كلمة المرور">
+            <button class="btn-primary" onclick="checkPass()">دخول</button>
+        </div>
+    </div>
+
+    <div class="admin-dashboard" id="adminDashboard">
+        <h1 style="color: var(--primary-pink); margin-bottom: 20px; font-size: 1.5rem;"><i class="fa-solid fa-sliders"></i> لوحة تحكم PRIX CHOC PARFUM</h1>
+        
+        <div class="dashboard-tabs">
+            <button class="tab-btn active" onclick="switchTab('orders')"><i class="fa-solid fa-list-check"></i> الطلبيات</button>
+            <button class="tab-btn" onclick="switchTab('addProduct')"><i class="fa-solid fa-plus"></i> إضافة وتعديل العطور</button>
+        </div>
+
+        <div class="tab-content active" id="tabOrders">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span>عدد الطلبيات: <b id="ordersCount" style="color: var(--primary-pink);">0</b></span>
+            </div>
+            <div class="orders-list" id="ordersList"></div>
+        </div>
+
+        <div class="tab-content" id="tabAddProduct">
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label>اسم العطر</label>
+                    <input type="text" id="pName" placeholder="مثال: Sauvage Dior" required>
+                </div>
+                <div class="form-group">
+                    <label>السعر (د.ج)</label>
+                    <input type="number" id="pPrice" placeholder="مثال: 4500" required>
+                </div>
+                <div class="form-group">
+                    <label>قسم العطر</label>
+                    <select id="pCategory" required>
+                        <option value="men">عطر رجالي ♂</option>
+                        <option value="women">عطر نسائي ♀</option>
+                        <option value="unisex">عطر للجنسين 💎</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>صورة العطر</label>
+                    <input type="file" id="pImageFile" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn-primary">نشر العطر لجميع الزبائن 🚀</button>
+            </form>
+
+            <h3 style="margin-top: 30px; margin-bottom: 10px;">إدارة العطور الحالية</h3>
+            <div class="products-manage-list" id="manageProductsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASS = "1234";
+       // 1. رابط مشروعك من Supabase
+const SUPABASE_URL = "https://abqhmoohlclnzsxskdqa.supabase.co";
+
+// 2. المفتاح الخاص بك المنسوخ من شاشة Publishable key
+const SUPABASE_ANON_KEY = "sb_publishable_v6y_D0RlGEXeoVf7zBdsWw_PQrS28yI";
+
+// 3. تهيئة الاتصال
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let orders = [];
+        let products = [];
+
+        function checkPass() {
+            const pass = document.getElementById('passInput').value;
+            if (pass === ADMIN_PASS) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+                loadData();
+            } else {
+                alert("كلمة المرور غير صحيحة!");
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if (tab === 'orders') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tabOrders').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tabAddProduct').classList.add('active');
+            }
+        }
+
+        async function loadData() {
+            // جلب العطور
+            const { data: pData } = await _supabase.from('products').select('*');
+            products = pData || [];
+            renderManageProducts();
+
+            // جلب الطلبيات
+            const { data: oData } = await _supabase.from('orders').select('*').order('created_at', { ascending: false });
+            orders = oData || [];
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersList');
+            document.getElementById('ordersCount').innerText = orders.length;
+            if (orders.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">لا توجد طلبيات حتى الآن</div>`;
+                return;
+            }
+            container.innerHTML = '';
+            orders.forEach((order) => {
+                let statusClass = '';
+                let statusText = 'قيد الانتظار ⏳';
+                if(order.status === 'confirmed') { statusClass = 'status-confirmed'; statusText = 'مؤكد ✅'; }
+                if(order.status === 'cancelled') { statusClass = 'status-cancelled'; statusText = 'ملغى ❌'; }
+
+                container.innerHTML += `
+                    <div class="order-card-admin ${statusClass}">
+                        <div class="order-header-admin">
+                            <span class="order-title"><i class="fa-solid fa-box"></i> ${order.product_name} (${order.product_price} د.ج)</span>
+                        </div>
+                        <div class="order-info">
+                            👤 <b>الزبون:</b> ${order.cust_name}<br>
+                            📞 <b>الهاتف:</b> <a href="tel:${order.cust_phone}" style="color:var(--primary-pink);">${order.cust_phone}</a><br>
+                            📍 <b>الولاية:</b> ${order.cust_state}<br>
+                            📌 <b>الحالة:</b> ${statusText}
+                        </div>
+                        <div class="order-actions">
+                            <a href="https://wa.me/213${order.cust_phone.substring(1)}" target="_blank" class="action-btn btn-call"><i class="fa-brands fa-whatsapp"></i> واتساب</a>
+                            <button class="action-btn btn-status" onclick="changeStatus(${order.id}, 'confirmed')">تأكيد ✅</button>
+                            <button class="action-btn btn-status" onclick="changeStatus(${order.id}, 'cancelled')">إلغاء ❌</button>
+                            <button class="action-btn" style="background:#555; color:white;" onclick="deleteOrder(${order.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderManageProducts() {
+            const grid = document.getElementById('manageProductsGrid');
+            grid.innerHTML = '';
+            products.forEach((product) => {
+                let catBadge = "للجنسين";
+                if(product.category === 'men') catBadge = "رجالي";
+                if(product.category === 'women') catBadge = "نسائي";
+
+                grid.innerHTML += `
+                    <div class="manage-card">
+                        <img src="${product.image}">
+                        <h4 style="font-size:0.85rem; margin:8px 0;">${product.name} (${catBadge})</h4>
+                        <div style="color:var(--primary-pink); font-weight:bold; font-size:0.85rem;">${product.price} د.ج</div>
+                        <button onclick="deleteProduct(${product.id})" style="background:rgba(255,0,0,0.2); color:#ff4d4d; border:1px solid red; padding:5px; border-radius:6px; margin-top:8px; width:100%; cursor:pointer;">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function changeStatus(id, status) {
+            await _supabase.from('orders').update({ status }).eq('id', id);
+            loadData();
+        }
+
+        async function deleteOrder(id) {
+            if(confirm("حذف الطلبية؟")) {
+                await _supabase.from('orders').delete().eq('id', id);
+                loadData();
+            }
+        }
+
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('pImageFile');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const newProduct = {
+                        name: document.getElementById('pName').value,
+                        price: document.getElementById('pPrice').value,
+                        category: document.getElementById('pCategory').value,
+                        image: e.target.result
+                    };
+
+                    const { error } = await _supabase.from('products').insert([newProduct]);
+                    if (!error) {
+                        alert("تم نشر العطر بنجاح وظهر لجميع الزبائن!");
+                        document.getElementById('addProductForm').reset();
+                        loadData();
+                    } else {
+                        alert("حدث خطأ أثناء رفع العطر!");
+                    }
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        });
+
+        async function deleteProduct(id) {
+            if(confirm("حذف العطر؟")) {
+                await _supabase.from('products').delete().eq('id', id);
+                loadData();
+            }
+        }
+    </script>
+</body>
+</html>
